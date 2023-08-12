@@ -4,8 +4,6 @@ import com.alura.jdbc.dao.CategoriaDAO;
 import com.alura.jdbc.factory.ConnectionFactory;
 import com.alura.jdbc.modelo.Categoria;
 
-import java.sql.Connection;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CategoriaController {
@@ -19,9 +17,9 @@ public class CategoriaController {
 		return categoriaDAO.listar();
 	}
 
-    public List<?> cargaReporte() {
+    public List<Categoria> cargaReporte() {
         // TODO
-        return new ArrayList<>();
+        return this.categoriaDAO.listarConProductos();
     }
 
 }

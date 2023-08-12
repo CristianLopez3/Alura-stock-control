@@ -1,7 +1,7 @@
 package com.alura.jdbc.dao;
 
-import com.alura.jdbc.factory.ConnectionFactory;
 import com.alura.jdbc.modelo.Categoria;
+import com.alura.jdbc.modelo.Producto;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -39,5 +39,41 @@ public class CategoriaDAO {
         }
 
 
+    }
+
+    public List<Categoria> listarConProductos() {
+        List<Categoria> resultado = new ArrayList<>();
+        try {
+            final PreparedStatement statement = connection.prepareStatement(
+                    "SELECT C.ID, C.NOMBRE, P.NOMBRE, P.CANTIDAD, P.ID " +
+                            "FROM CATEGORIA C JOIN PRODUCTO P ON C.ID = P.CATEGORIAID ");
+            try (statement) {
+                statement.execute();
+                final ResultSet resultSet = statement.getResultSet();
+                try (resultSet) {
+                    while (resultSet.next()) {
+                       Integer categoriaId = resultSet.getInt("C.ID");
+                       String categoriaNombre = resultSet.getString("C.NOMBRE");
+                       var categoria = resultado
+                               .stream()
+                               .filter(category -> category.getId().equals(categoriaId))
+                               .findAny().orElseGet(()-> {
+                                   Categoria category = new Categoria(categoriaId, categoriaNombre);
+                                   resultado.add(category);
+                                   return category;
+                               });
+                       Producto producto = new Producto(
+                               resultSet.getInt("P.ID"),
+                               resultSet.getString("P.NOMBRE"),
+                               resultSet.getInt("P.CANTIDAD")
+                       );
+                       categoria.agregar(producto);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return resultado;
     }
 }

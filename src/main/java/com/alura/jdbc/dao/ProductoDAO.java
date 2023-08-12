@@ -1,6 +1,7 @@
 package com.alura.jdbc.dao;
 
 import com.alura.jdbc.factory.ConnectionFactory;
+import com.alura.jdbc.modelo.Categoria;
 import com.alura.jdbc.modelo.Producto;
 
 import java.sql.*;
@@ -67,6 +68,35 @@ public class ProductoDAO {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public List<Producto> listar(Integer categoriaId){
+        List<Producto> resultado = new ArrayList<>();
+        final PreparedStatement statement;
+        try{
+            statement = connection.prepareStatement("SELECT ID, NOMBRE, DESCRIPCION, CANTIDAD " +
+                    "FROM PRODUCTO WHERE categoriaId = ?");
+            try(statement){
+                statement.setInt(1, categoriaId);
+                statement.execute();
+                final ResultSet resultSet = statement.getResultSet();
+                try(resultSet){
+                    while(resultSet.next()){
+                        Producto fila = new Producto(
+                                resultSet.getInt("ID"),
+                                resultSet.getString("NOMBRE"),
+                                resultSet.getString("DESCRIPCION"),
+                                resultSet.getInt("CANTIDAD")
+                        );
+                        resultado.add(fila);
+                    }
+                }
+            }
+            return resultado;
+        } catch(SQLException e){
+            throw new RuntimeException(e);
+        }
+
     }
 
     public int eliminar(Integer id) {
