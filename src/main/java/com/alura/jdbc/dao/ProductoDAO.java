@@ -15,19 +15,27 @@ public class ProductoDAO {
         this.connection = connection;
     }
 
-    public void guardar(Producto producto)  {
-        String nombre = producto.getNombre();
-        String descripcion = producto.getDescripcion();
-        Integer cantidad = producto.getCantidad();
-
-        try(connection){
-            connection.setAutoCommit(false);
+    public void guardar(Producto producto, Integer id)  {
+        try{
             final PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO producto(nombre, descripcion, cantidad)  VALUES(?, ?, ?);",
+                    "INSERT INTO producto(nombre, descripcion, cantidad, categoriaId)  VALUES(?, ?, ?, ?);",
                     Statement.RETURN_GENERATED_KEYS
             );
             try(statement){
-                ejecutaRegistro(producto, statement);
+                statement.setString(1, producto.getNombre());
+                statement.setString(2, producto.getDescripcion());
+                statement.setInt(3, producto.getCantidad());
+                statement.setInt(4, producto.getCategoriaId());
+                statement.execute();
+                final ResultSet resultSet = statement.getGeneratedKeys();
+                try(resultSet){
+                    while(resultSet.next()){
+                        producto.setId(resultSet.getInt(1));
+                        System.out.println(String.format(
+                                "El id del producto insertado es %s ", producto
+                        ));
+                    }
+                }
             }
 
         } catch(SQLException e){
@@ -35,42 +43,24 @@ public class ProductoDAO {
         }
     }
 
-    private void ejecutaRegistro(Producto producto, PreparedStatement statement) throws SQLException {
-        statement.setString(1, producto.getNombre());
-        statement.setString(2, producto.getDescripcion());
-        statement.setInt(3, producto.getCantidad());
-        statement.execute();
-        final ResultSet resultSet = statement.getGeneratedKeys();
-        try(resultSet){
-            while(resultSet.next()){
-                producto.setId(resultSet.getInt(1));
-                System.out.println(String.format(
-                        "El id del producto insertado es %s ", producto
-                ));
-            }
-
-        }
-
-    }
-
     public List<Producto> listar() {
         List<Producto> resultado = new ArrayList<>();
         final PreparedStatement statement;
         try {
-            statement = connection.prepareStatement("SELECT ID, NOMBRE, DESCRIPCION, CANTIDAD FROM producto");
+            statement = connection.prepareStatement("SELECT ID, NOMBRE, DESCRIPCION, CANTIDAD FROM PRODUCTO");
             try (statement) {
                 statement.execute();
                 final ResultSet resultSet = statement.getResultSet();
                 try(resultSet){
-                        while (resultSet.next()) {
-                            Producto fila = new Producto(
+                    while (resultSet.next()) {
+                        Producto fila = new Producto(
                                     resultSet.getInt("ID"),
                                     resultSet.getString("NOMBRE"),
                                     resultSet.getString("DESCRIPCION"),
                                     resultSet.getInt("CANTIDAD")
                             );
-                            resultado.add(fila);
-                        }
+                        resultado.add(fila);
+                    }
                 }
             }
             return resultado;
